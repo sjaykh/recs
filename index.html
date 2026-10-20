@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recommend me something | Sanjay Krishna</title>
+<meta name="description" content="Books, films, articles and videos people think I should get to. Add yours.">
+<link rel="canonical" href="https://recs.sjaykh.in/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://recs.sjaykh.in/">
+<meta property="og:title" content="Recommend me something | Sanjay Krishna">
+<meta property="og:description" content="Books, films, articles and videos people think I should get to. Add yours.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='black'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='24' fill='white' text-anchor='middle'%3Er%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Rubik:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #000;
+  --text: #fff;
+  --dim: rgba(255, 255, 255, .62);
+  --rule: rgba(255, 255, 255, .28);
+  --danger: #FF8A80;
+  --serif: "EB Garamond", Georgia, "Times New Roman", serif;
+  --sans: "Rubik", "Helvetica Neue", Arial, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 20px/1.5 var(--serif); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.page { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+
+/* nav */
+nav { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 22px; padding: 22px 0 0; font: 300 19px/1.2 var(--sans); letter-spacing: .12em; }
+nav a { text-decoration: none; }
+nav a:hover { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+
+/* intro */
+h1 { margin: 64px 0 18px; font: 400 clamp(46px, 8vw, 76px)/1 var(--serif); letter-spacing: -0.01em; }
+.intro { margin: 0; max-width: 34em; color: var(--dim); }
+
+/* form: label column on the right edge, inputs on the left, like a ledger */
+.ask { margin: 48px 0 0; max-width: 620px; }
+.row { display: grid; grid-template-columns: 150px minmax(0, 1fr); column-gap: 18px; align-items: baseline; margin: 0 0 12px; }
+.row label { text-align: right; font-size: 17px; color: var(--dim); }
+input, select {
+  font: inherit; font-size: 20px; color: var(--text);
+  background: transparent; border: 0; border-bottom: 1px solid var(--rule); border-radius: 0;
+  padding: 4px 2px 5px; width: 100%; margin: 0; min-width: 0;
+}
+input::placeholder { color: var(--dim); opacity: .55; font-style: italic; }
+input:focus-visible, select:focus-visible { outline: none; border-bottom-color: var(--text); box-shadow: 0 1px 0 var(--text); }
+input[aria-invalid="true"] { border-bottom-color: var(--danger); }
+select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 22px; background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%), linear-gradient(135deg, var(--dim) 50%, transparent 50%); background-position: right 9px top 55%, right 4px top 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+select option { color: #000; background: #fff; }
+.go-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); column-gap: 18px; margin-top: 22px; align-items: baseline; }
+.go {
+  grid-column: 2; justify-self: start;
+  font: 400 20px/1 var(--serif); color: var(--bg); background: var(--text);
+  border: 0; border-radius: 999px; padding: 10px 22px 11px; cursor: pointer;
+}
+.go:hover { transform: rotate(-2deg); }
+.go:disabled { opacity: .6; cursor: progress; transform: none; }
+.go:focus-visible, a:focus-visible { outline: 1px solid var(--text); outline-offset: 4px; }
+.trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.msg { grid-column: 2; margin: 14px 0 0; font-style: italic; color: var(--dim); }
+.msg:empty { display: none; }
+.msg.bad { color: var(--danger); font-style: normal; }
+
+/* the cloud */
+.shelf { margin: 96px 0 0; }
+.shelf h2 { margin: 0 0 6px; font: 400 clamp(34px, 5vw, 48px)/1.1 var(--serif); }
+.key { margin: 0 0 40px; font-size: 17px; color: var(--dim); }
+.cloud {
+  list-style: none; margin: 0 -16px; padding: 0;
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-around;
+  gap: 22px 26px;
+}
+.cloud li { font-size: 25px; line-height: 1.15; letter-spacing: .03em; text-align: center; text-wrap: balance; padding: 0 6px; transition: transform .01s; }
+.cloud li:nth-child(-n + 24) { font-size: 27px; }
+.cloud li:nth-child(-n + 12) { font-size: 30px; }
+.cloud li:nth-child(-n + 6) { font-size: 33px; }
+.cloud li > * { color: inherit; text-decoration: none; display: inline-block; opacity: .45; }
+.cloud li.now > * { opacity: 1; }
+.cloud li.done > * { text-decoration: line-through; text-decoration-thickness: 1px; opacity: .45; }
+.cloud li.sent > * { opacity: .8; font-style: italic; border-bottom: 1px dashed var(--dim); }
+.cloud li > a:hover, .cloud li > a:focus-visible { opacity: 1; }
+
+/* a mix of faces, weights and tilts */
+.cloud li:nth-child(5n + 1) { font-family: var(--serif); }
+.cloud li:nth-child(5n + 2) { font-family: var(--sans); font-weight: 300; }
+.cloud li:nth-child(5n + 3) { font-family: Georgia, "Times New Roman", serif; }
+.cloud li:nth-child(5n + 4) { font-family: var(--serif); font-style: italic; }
+.cloud li:nth-child(5n + 0) { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.cloud li:nth-child(7n + 3) { letter-spacing: -0.02em; }
+.cloud li:nth-child(4n + 0) { transform: rotate(1deg); }
+.cloud li:nth-child(4n + 1) { transform: rotate(-0.6deg); }
+.cloud li:nth-child(4n + 2) { transform: rotate(0.5deg); }
+.cloud li:nth-child(4n + 3) { transform: rotate(-0.75deg); }
+.cloud li:nth-child(2n):hover { transform: rotate(-2deg); }
+.cloud li:nth-child(2n + 1):hover { transform: rotate(2deg); }
+
+.note { margin: 0; color: var(--dim); font-style: italic; }
+.thanks { margin: 56px 0 0; max-width: 40em; color: var(--dim); }
+.thanks a, .thanks strong { color: var(--text); font-weight: 400; }
+.thanks a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--rule); }
+.thanks a:hover { text-decoration-color: var(--text); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+footer { margin: 140px 0 0; padding: 0 0 40px; font: 300 15px/1.4 var(--sans); letter-spacing: .1em; color: var(--dim); }
+footer a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: var(--rule); }
+footer a:hover { color: var(--text); text-decoration-color: var(--text); }
+
+@media (max-width: 600px) {
+  .page { padding: 0 20px; }
+  nav { font-size: 16px; }
+  h1 { margin-top: 44px; }
+  .row, .go-row { grid-template-columns: minmax(0, 1fr); }
+  .row label { text-align: left; font-size: 16px; }
+  .row { margin-bottom: 18px; }
+  .go, .msg { grid-column: 1; }
+  .shelf { margin-top: 72px; }
+  .cloud { margin: 0; gap: 16px 18px; }
+  .cloud li > * { font-size: .8em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud li:hover, .go:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <nav aria-label="Site">
+    <a href="https://sjaykh.in/">back to sjaykh.in</a>
+  </nav>
+
+  <main>
+    <h1>Recommend me something</h1>
+    <p class="intro">Books, films, articles and videos people think I should get to. Add yours and it joins the pile once I've had a look.</p>
+
+    <form class="ask" id="ask" novalidate>
+      <div class="row">
+        <label for="type">Type</label>
+        <select id="type" name="type">
+          <option>Book</option>
+          <option>Film</option>
+          <option>Article</option>
+          <option>Video</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="title">Title</label>
+        <input id="title" name="title" maxlength="200" autocomplete="off" required>
+      </div>
+      <div class="row">
+        <label for="url">Link</label>
+        <input id="url" name="url" maxlength="500" inputmode="url" autocomplete="off" required placeholder="Goodreads, or anywhere">
+      </div>
+      <div class="row">
+        <label for="name">Your name</label>
+        <input id="name" name="name" maxlength="80" autocomplete="name" required>
+      </div>
+      <div class="row">
+        <label for="link">Your website</label>
+        <input id="link" name="link" maxlength="300" inputmode="url" autocomplete="url" placeholder="optional">
+      </div>
+      <div class="trap" aria-hidden="true"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="go-row">
+        <button class="go" type="submit">Recommend</button>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </div>
+      <noscript><p class="msg bad">This form needs JavaScript to send.</p></noscript>
+    </form>
+
+    <section class="shelf" aria-labelledby="shelf-h">
+      <h2 id="shelf-h">The pile</h2>
+      <p class="key">Bright ones I'm on right now. Faded ones are up next. Crossed out, done.</p>
+      <div id="list" aria-busy="true"><p class="note">Loading…</p></div>
+    </section>
+  </main>
+
+  <footer>design inspired by <a href="https://taylor.town/" rel="noopener">taylor.town</a></footer>
+</div>
+
+<script>
+(() => {
+  // Paste your Apps Script web app URL here (it ends in /exec).
+  const API = 'PASTE_YOUR_WEB_APP_URL_HERE';
+
+  const HINTS = {
+    Book: 'Goodreads, or anywhere',
+    Film: 'Letterboxd or IMDb',
+    Article: 'where I can read it',
+    Video: 'YouTube, or anywhere',
+  };
+  const STATE = { 'In progress': ['now', 'On it now'], 'Done': ['done', 'Done'] };
+
+  const $ = (id) => document.getElementById(id);
+  const form = $('ask'), msg = $('msg'), list = $('list');
+  const f = { type: $('type'), title: $('title'), url: $('url'), name: $('name'), link: $('link') };
+  const btn = form.querySelector('.go');
+  const trap = form.querySelector('[name=website]');
+  const openedAt = Date.now();
+
+  /* helpers */
+  const el = (tag, attrs, ...kids) => {
+    const n = document.createElement(tag);
+    for (const k in attrs || {}) if (attrs[k] != null && attrs[k] !== false) {
+      if (k === 'class') n.className = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    }
+    kids.flat().forEach(c => c != null && c !== false && n.append(c));
+    return n;
+  };
+  const safeLink = (v) => {
+    let s = String(v || '').trim();
+    if (!s) return '';
+    if (!/^https?:\/\//i.test(s)) {
+      if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s)) s = 'https://' + s; else return null;
+    }
+    try { const u = new URL(s); return /^https?:$/.test(u.protocol) ? u.href : null; } catch (e) { return null; }
+  };
+  const titleKey = (type, t) => String(type || '').toLowerCase() + '|' + String(t).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+  const urlKey = (u) => { const s = safeLink(u); return s ? s.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/[/#?]+$/, '') : ''; };
+  const keep = {
+    get(k) { try { return localStorage.getItem('recs-' + k) || ''; } catch (e) { return ''; } },
+    set(k, v) { try { localStorage.setItem('recs-' + k, v); } catch (e) {} },
+  };
+
+  /* the pile */
+  let items = [];
+  const pending = [];
+
+  // "Book, recommended by Meera" for the tooltip and screen readers.
+  const about = (it, state) => {
+    const parts = [];
+    const lead = it.by ? 'recommended by ' + it.by : it.via ? 'found through ' + it.via : '';
+    if (HINTS[it.type]) parts.push(it.type + (lead ? ', ' + lead : ''));
+    else if (lead) parts.push(lead[0].toUpperCase() + lead.slice(1));
+    parts.push(state);
+    return parts.join('. ');
+  };
+
+  const item = (it) => {
+    const [cls, label] = it.pending ? ['sent', 'Waiting for me to approve it'] : (STATE[it.status] || ['', 'Up next']);
+    const link = safeLink(it.url);
+    const text = about(it, label);
+    const inner = link
+      ? el('a', { href: link, rel: 'noopener noreferrer', target: '_blank', title: text }, it.title)
+      : el('span', { title: text }, it.title);
+    return el('li', { class: cls || null }, inner, el('span', { class: 'vh' }, ' (' + text + ')'));
+  };
+
+  const rank = (it) => it.pending ? 0 : it.status === 'In progress' ? 1 : it.status === 'Done' ? 3 : 2;
+  const order = (a, b) => rank(a) - rank(b) || String(b.added || '').localeCompare(String(a.added || ''));
+
+  const note = (text) => {
+    list.textContent = '';
+    list.removeAttribute('aria-busy');
+    list.append(el('p', { class: 'note' }, text));
+  };
+
+  const render = () => {
+    const all = [...pending, ...items].sort(order);
+    if (!all.length) return note('Nothing here yet. Be the first to recommend something.');
+    list.textContent = '';
+    list.removeAttribute('aria-busy');
+    list.append(el('ul', { class: 'cloud' }, all.map(item)));
+    const t = thanks();
+    if (t) list.append(t);
+  };
+
+  // "With thanks to Meera, Arjun and Rhea." Names link to their websites.
+  const thanks = () => {
+    const seen = new Map();
+    items.forEach(i => {
+      if (!i.by) return;
+      const k = i.by.toLowerCase();
+      if (!seen.has(k)) seen.set(k, { name: i.by, link: safeLink(i.byLink) });
+      else if (!seen.get(k).link) seen.get(k).link = safeLink(i.byLink);
+    });
+    const people = [...seen.values()];
+    if (!people.length) return null;
+    const p = el('p', { class: 'thanks' }, 'With thanks to ');
+    people.forEach((x, i) => {
+      if (i) p.append(i === people.length - 1 ? ' and ' : ', ');
+      p.append(x.link ? el('a', { href: x.link, rel: 'nofollow ugc noopener noreferrer', target: '_blank' }, x.name) : el('strong', {}, x.name));
+    });
+    p.append('.');
+    return p;
+  };
+
+  /* form */
+  f.name.value = keep.get('name');
+  f.link.value = keep.get('link');
+  f.type.addEventListener('change', () => { f.url.placeholder = HINTS[f.type.value]; });
+
+  const say = (text, bad, field) => {
+    msg.textContent = text;
+    msg.classList.toggle('bad', !!bad);
+    Object.values(f).forEach(i => i.removeAttribute('aria-invalid'));
+    if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
+  };
+
+  let busy = false;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const d = { type: f.type.value, title: f.title.value.trim(), url: f.url.value.trim(), name: f.name.value.trim(), link: f.link.value.trim() };
+    if (!d.title) return say('Add a title.', true, f.title);
+    if (!d.url) return say('Add a link to it.', true, f.url);
+    const url = safeLink(d.url);
+    if (!url) return say("That link doesn't work. Paste the full address.", true, f.url);
+    if (!d.name) return say('Add your name.', true, f.name);
+    const link = safeLink(d.link);
+    if (link === null) return say("That website doesn't work. Try something like yoursite.com", true, f.link);
+    d.url = url; d.link = link;
+
+    if ([...items, ...pending].some(i => titleKey(i.type, i.title) === titleKey(d.type, d.title) || urlKey(i.url) === urlKey(url))) {
+      return say("That one's already in the pile.");
+    }
+    if (!/^https?:\/\//.test(API)) return say("This form isn't connected yet.", true);
+
+    busy = true; btn.disabled = true; btn.textContent = 'Sending…'; say('');
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        body: new URLSearchParams({ ...d, website: trap.value, t: String(Date.now() - openedAt) }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!out.ok) throw new Error(out.error || '');
+      keep.set('name', d.name);
+      keep.set('link', d.link);
+      if (out.duplicate) {
+        say('Someone beat you to that one. Thanks anyway.');
+      } else {
+        say(`Thanks, ${d.name}. It joins the pile once I've had a look.`);
+        pending.push({ type: d.type, title: d.title, url: d.url, by: d.name, byLink: d.link, pending: true });
+        render();
+      }
+      // Clear what was sent, but not anything typed while it was sending.
+      if (f.title.value.trim() === d.title) f.title.value = '';
+      if (safeLink(f.url.value) === d.url) f.url.value = '';
+    } catch (err) {
+      say(err.message || "Couldn't send that. Check your connection and try again.", true);
+    } finally {
+      busy = false; btn.disabled = false; btn.textContent = 'Recommend';
+    }
+  });
+
+  /* load */
+  if (!/^https?:\/\//.test(API)) return note("This page isn't connected to its sheet yet.");
+  fetch(API)
+    .then(r => r.json())
+    .then(out => {
+      if (!out || !out.ok || !Array.isArray(out.items)) throw new Error();
+      items = out.items;
+      render();
+    })
+    .catch(() => note("The pile didn't load. Refresh the page to try again."));
+})();
+</script>
+</body>
+</html>
