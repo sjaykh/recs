@@ -8,6 +8,7 @@ The page only opens once recs.sjaykh.in is connected (step 2 below). Until then,
 
 - `index.html`: the whole page
 - `Code.gs`: the Google Sheet backend. It lives in Apps Script, not on the site; it's kept here for reference.
+- `appsscript.json`: the Apps Script manifest. It pins the script to the smallest set of permissions: this one spreadsheet, sending email as you, and reading your email address so it knows where to send it.
 
 ## Setup
 
@@ -15,9 +16,17 @@ The page only opens once recs.sjaykh.in is connected (step 2 below). Until then,
 
 1. Create a Google Sheet at sheets.new and name it "Recommendations".
 2. Go to Extensions → Apps Script. Replace the contents of `Code.gs` there with this repo's `Code.gs`, then save.
-3. Choose `setup` in the function dropdown and click Run. Approve the permissions it asks for.
-4. Go to Deploy → New deployment → Web app. Set "Execute as" to **Me** and "Who has access" to **Anyone**.
-5. Copy the web app URL (it ends in `/exec`). Then open `index.html` in this repo, click the pencil icon, replace `PASTE_YOUR_WEB_APP_URL_HERE` with the URL, and commit.
+3. Open Project Settings (gear icon) and tick **Show "appsscript.json" manifest file in editor**. Back in the editor, replace the contents of `appsscript.json` with this repo's `appsscript.json`, then save.
+4. Choose `setup` in the function dropdown and click Run. Approve the permissions it asks for.
+5. Go to Deploy → New deployment → Web app. Set "Execute as" to **Me** and "Who has access" to **Anyone**.
+6. Copy the web app URL (it ends in `/exec`). Then open `index.html` in this repo, click the pencil icon, replace `PASTE_YOUR_WEB_APP_URL_HERE` with the URL, and commit.
+
+### Moving an existing script to the locked-down version
+
+1. Replace `Code.gs` in Apps Script with this repo's version, and `appsscript.json` as in step 3 above. Save both.
+2. Remove the old, broader access: go to myaccount.google.com/connections, find the script project, and choose **Delete all connections**.
+3. Run `setup` once and approve the new, narrower permissions. Existing rows aren't touched.
+4. Go to Deploy → Manage deployments → Edit (pencil) → Version: **New version** → Deploy. The `/exec` URL stays the same.
 
 ### 2. Connect recs.sjaykh.in
 

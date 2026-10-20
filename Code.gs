@@ -1,19 +1,31 @@
 /**
+ * @OnlyCurrentDoc
+ *
  * Backend for recs.sjaykh.in
  * A Google Sheet that stores recommendations, plus a tiny web API for the page.
+ *
+ * The @OnlyCurrentDoc line above limits this script to the one spreadsheet it is
+ * attached to. It cannot open, read or change any of your other files.
+ * appsscript.json pins the exact permissions it may ask for:
+ *   - this spreadsheet only
+ *   - send email as you (used only to email you about new recommendations)
+ *   - see your email address (so it knows where to send that email)
  *
  * SETUP (once)
  * 1. Create a new Google Sheet (sheets.new) and name it "Recommendations".
  * 2. Extensions > Apps Script. Replace everything in Code.gs with this file. Save.
- * 3. Pick "setup" in the function dropdown and click Run. Approve the permissions.
+ * 3. Project Settings (gear icon) > tick "Show appsscript.json manifest file in editor".
+ *    Back in the editor, replace everything in appsscript.json with this repo's appsscript.json. Save.
+ * 4. Pick "setup" in the function dropdown and click Run. Approve the permissions.
  *    This adds the headers, the Type and Status dropdowns and the Approved checkbox column.
- * 4. Deploy > New deployment > type "Web app".
+ * 5. Deploy > New deployment > type "Web app".
  *      Execute as: Me
  *      Who has access: Anyone
  *    Copy the Web app URL (ends in /exec) into index.html (the API line near the top of the script).
  *
  * DAY TO DAY
- * - New recommendations land at the bottom with Approved unticked. Tick it to publish.
+ * - New recommendations land at the bottom with Approved unticked. Open the link
+ *   before you tick Approved: ticking it publishes the title and link.
  * - Change Status (Not started / In progress / Done) from the dropdown.
  * - Add your own finds as new rows. Leave "Recommended by" empty and fill
  *   "Found through" instead (e.g. Instagram).
@@ -26,8 +38,11 @@
 const CONFIG = {
   SHEET_NAME: 'Recommendations',
   NOTIFY_BY_EMAIL: true,          // email you when someone recommends something
-  MAX_SUGGESTIONS_PER_HOUR: 30,   // global cap, protects against floods
+  MAX_SUGGESTIONS_PER_HOUR: 30,   // across all visitors; protects against floods
+  MAX_SUGGESTIONS_PER_DAY: 100,   // hard daily ceiling on new rows
   MIN_FILL_MS: 3000,              // forms submitted faster than this are bots
+  MAX_REQUEST_BYTES: 4000,        // a real submission is a few hundred bytes
+  KEEP_MAIL_QUOTA: 10,            // stop emailing when Google's daily quota gets this low
   CACHE_SECONDS: 60,              // how long the public list is cached
 };
 
@@ -66,34 +81,54 @@ function setup() {
 
 /* ------------------------------------------------------------- read API */
 
+// Returns approved rows only, and only the fields the page shows.
 function doGet() {
-  const cache = CacheService.getScriptCache();
-  const cached = cache.get(CACHE_KEY);
-  if (cached) return json_(JSON.parse(cached));
+  try {
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(CACHE_KEY);
+    if (cached) return json_(JSON.parse(cached));
 
-  const items = readRows_()
-    .filter(r => r[COL.approved] === true && String(r[COL.title]).trim())
-    .map(r => ({
-      type: TYPES.indexOf(r[COL.type]) > -1 ? r[COL.type] : '',
-      title: clean_(r[COL.title], LIMITS.title),
-      url: safeLink_(r[COL.url]),
-      by: clean_(r[COL.by], LIMITS.name),
-      byLink: safeLink_(r[COL.byLink]),
-      via: clean_(r[COL.via], LIMITS.name),
-      status: STATUSES.indexOf(r[COL.status]) > -1 ? r[COL.status] : 'Not started',
-      added: r[COL.added] instanceof Date
-        ? Utilities.formatDate(r[COL.added], 'Etc/UTC', 'yyyy-MM-dd')
-        : '',
-    }));
+    const items = readRows_()
+      .filter(r => r[COL.approved] === true && clean_(r[COL.title], LIMITS.title))
+      .map(r => ({
+        type: TYPES.indexOf(r[COL.type]) > -1 ? r[COL.type] : '',
+        title: clean_(r[COL.title], LIMITS.title),
+        url: safeLink_(r[COL.url]),
+        by: clean_(r[COL.by], LIMITS.name),
+        byLink: safeLink_(r[COL.byLink]),
+        via: clean_(r[COL.via], LIMITS.name),
+        status: STATUSES.indexOf(r[COL.status]) > -1 ? r[COL.status] : 'Not started',
+        added: r[COL.added] instanceof Date
+          ? Utilities.formatDate(r[COL.added], 'Etc/UTC', 'yyyy-MM-dd')
+          : '',
+      }));
 
-  const payload = { ok: true, items: items };
-  try { cache.put(CACHE_KEY, JSON.stringify(payload), CONFIG.CACHE_SECONDS); } catch (e) { /* too big to cache */ }
-  return json_(payload);
+    const payload = { ok: true, items: items };
+    try { cache.put(CACHE_KEY, JSON.stringify(payload), CONFIG.CACHE_SECONDS); } catch (e) { /* too big to cache */ }
+    return json_(payload);
+  } catch (err) {
+    console.error('doGet failed: ' + err);
+    return json_({ ok: false });
+  }
 }
 
 /* ------------------------------------------------------------ write API */
 
+// Only ever appends one new, unapproved row. It never edits or deletes anything.
 function doPost(e) {
+  try {
+    return handlePost_(e);
+  } catch (err) {
+    // Log the detail for you; never send internals back to the visitor.
+    console.error('doPost failed: ' + err);
+    return json_({ ok: false, error: 'Something went wrong. Try again later.' });
+  }
+}
+
+function handlePost_(e) {
+  const body = (e && e.postData && e.postData.contents) || '';
+  if (body.length > CONFIG.MAX_REQUEST_BYTES) return json_({ ok: false, error: 'That was too long.' });
+
   const p = (e && e.parameter) || {};
 
   // Bots: honeypot filled in, or form submitted impossibly fast.
@@ -110,13 +145,16 @@ function doPost(e) {
   if (!item.title) return json_({ ok: false, error: 'Add a title.' });
   if (!item.url) return json_({ ok: false, error: 'Add a link to it.' });
   if (!item.by) return json_({ ok: false, error: 'Add your name.' });
+  if (hasLink_(item.title) || hasLink_(item.by)) {
+    return json_({ ok: false, error: 'Put links in the link fields only.' });
+  }
 
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return json_({ ok: false, error: 'Busy right now. Try again in a moment.' });
 
   try {
     if (!underRateLimit_()) {
-      return json_({ ok: false, error: 'Lots of recommendations right now. Try again in an hour.' });
+      return json_({ ok: false, error: 'Lots of recommendations right now. Try again later.' });
     }
 
     const titleKey = titleKey_(item.type, item.title);
@@ -133,7 +171,7 @@ function doPost(e) {
     row[COL.by] = sheetSafe_(item.by);
     row[COL.byLink] = sheetSafe_(item.byLink);
     row[COL.status] = 'Not started';
-    row[COL.approved] = false;
+    row[COL.approved] = false;   // nothing a visitor sends is ever published automatically
 
     const sheet = getSheet_();
     sheet.appendRow(row);
@@ -178,16 +216,18 @@ function json_(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Trim, collapse whitespace, strip control characters, cap length.
+// Trim, collapse whitespace, cap length, and strip control characters plus the
+// invisible and right-to-left characters used to disguise text and links.
 function clean_(value, max) {
   return String(value == null ? '' : value)
-    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/[\u0000-\u001F\u007F​-‏‪-‮⁠-⁩﻿]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, max);
 }
 
-// Only http(s) links survive. Bare domains get https:// added.
+// Only plain http(s) links survive. Bare domains get https:// added.
+// Links with a username or password before the host (https://real.com@evil.com) are dropped.
 function safeLink_(value) {
   let s = clean_(value, LIMITS.link);
   if (!s) return '';
@@ -195,7 +235,13 @@ function safeLink_(value) {
     if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s)) s = 'https://' + s;
     else return '';
   }
-  return /^https?:\/\/[^\s/$.?#][^\s]*$/i.test(s) ? s : '';
+  if (!/^https?:\/\/[^\s/$.?#][^\s]*$/i.test(s)) return '';
+  if (/^https?:\/\/[^/?#]*@/i.test(s)) return '';
+  return s;
+}
+
+function hasLink_(s) {
+  return /https?:\/\/|www\./i.test(s);
 }
 
 // Stop text that starts with = + - @ from being read as a formula.
@@ -213,12 +259,17 @@ function urlKey_(url) {
   return s ? s.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/[/#?]+$/, '') : '';
 }
 
+// Counts per hour and per day across all visitors. Call only while holding the lock.
 function underRateLimit_() {
   const cache = CacheService.getScriptCache();
-  const key = 'recs:rate:' + Utilities.formatDate(new Date(), 'Etc/UTC', 'yyyyMMddHH');
-  const n = Number(cache.get(key) || 0);
-  if (n >= CONFIG.MAX_SUGGESTIONS_PER_HOUR) return false;
-  cache.put(key, String(n + 1), 3600);
+  const now = new Date();
+  const hourKey = 'recs:rate:h:' + Utilities.formatDate(now, 'Etc/UTC', 'yyyyMMddHH');
+  const dayKey = 'recs:rate:d:' + Utilities.formatDate(now, 'Etc/UTC', 'yyyyMMdd');
+  const perHour = Number(cache.get(hourKey) || 0);
+  const perDay = Number(cache.get(dayKey) || 0);
+  if (perHour >= CONFIG.MAX_SUGGESTIONS_PER_HOUR || perDay >= CONFIG.MAX_SUGGESTIONS_PER_DAY) return false;
+  cache.put(hourKey, String(perHour + 1), 3600);
+  cache.put(dayKey, String(perDay + 1), 21600);  // cache entries last at most 6 hours
   return true;
 }
 
@@ -226,8 +277,10 @@ function clearCache_() {
   CacheService.getScriptCache().remove(CACHE_KEY);
 }
 
+// Emails only you. Skips quietly if Google's daily email quota is nearly used up.
 function notify_(item) {
   try {
+    if (MailApp.getRemainingDailyQuota() <= CONFIG.KEEP_MAIL_QUOTA) return;
     const to = Session.getEffectiveUser().getEmail();
     if (!to) return;
     MailApp.sendEmail({
@@ -238,7 +291,7 @@ function notify_(item) {
         item.url,
         'Recommended by ' + item.by + (item.byLink ? ' (' + item.byLink + ')' : ''),
         '',
-        'Tick Approved to publish it:',
+        'Check the link, then tick Approved to publish it:',
         SpreadsheetApp.getActiveSpreadsheet().getUrl(),
       ].join('\n'),
     });
