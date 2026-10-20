@@ -2,7 +2,7 @@
 
 Recommendations for me: books, films, articles and videos people think I should get to. One static page on GitHub Pages, with a Google Sheet behind it.
 
-Until the custom domain is connected, the page lives at https://sjaykh.github.io/recs/.
+The page only opens once recs.sjaykh.in is connected (step 2 below). Until then, sjaykh.github.io/recs/ redirects to sjaykh.in/recs/, because the old sjaykh.github.io site still has sjaykh.in set as its custom domain, and sjaykh.in now points to Bear.
 
 ## Files
 
