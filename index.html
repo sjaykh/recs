@@ -89,6 +89,8 @@ select option { color: #000; background: #fff; }
 .cloud li.sent > * { opacity: .8; font-style: italic; border-bottom: 1px dashed var(--dim); }
 .cloud li > a:hover, .cloud li > a:focus-visible { opacity: 1; }
 .cloud li > .who { font-size: .55em; letter-spacing: .02em; margin-left: .35em; white-space: nowrap; text-decoration: none; font-style: normal; border: 0; }
+.cloud li > a.who { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--rule); }
+.cloud li > a.who:hover, .cloud li > a.who:focus-visible { text-decoration-color: currentColor; }
 
 /* a mix of faces, weights and tilts */
 .cloud li:nth-child(5n + 1) { font-family: var(--serif); }
@@ -179,7 +181,7 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
 
     <section class="shelf" aria-labelledby="shelf-h">
       <h2 id="shelf-h">The pile</h2>
-      <p class="key">Bright ones I'm on right now. Faded ones are up next. Crossed out, done.</p>
+      <p class="key">Bright ones I'm on right now. Faded ones are up next. Crossed out, done. The name in brackets is the person who recommended it.</p>
       <div id="list" aria-busy="true"><p class="note">Loading…</p></div>
     </section>
   </main>
@@ -235,6 +237,7 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
   /* the pile */
   let items = [];
   const pending = [];
+  const sites = new Map();   // name -> website, so every entry from a person links the same way
 
   // "Book, recommended by Meera" for the tooltip and screen readers.
   const about = (it, state) => {
@@ -254,7 +257,11 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
       ? el('a', { href: link, rel: 'noopener noreferrer', target: '_blank', title: text }, it.title)
       : el('span', { title: text }, it.title);
     // The recommender's name, small and in brackets, right after the title.
-    const who = it.by ? el('span', { class: 'who', 'aria-hidden': 'true' }, '(' + it.by + ')') : null;
+    // It links to their website when they gave one.
+    const site = safeLink(it.byLink) || sites.get(String(it.by).toLowerCase()) || '';
+    const who = !it.by ? null
+      : site ? el('a', { class: 'who', href: site, rel: 'nofollow ugc noopener noreferrer', target: '_blank', title: it.by + "'s website", 'aria-label': it.by + "'s website" }, '(' + it.by + ')')
+      : el('span', { class: 'who', 'aria-hidden': 'true' }, '(' + it.by + ')');
     return el('li', { class: cls || null }, inner, who, el('span', { class: 'vh' }, ' (' + text + ')'));
   };
 
@@ -268,6 +275,8 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
   };
 
   const render = () => {
+    sites.clear();
+    items.forEach(i => { const k = String(i.by || '').toLowerCase(); const l = safeLink(i.byLink); if (k && l && !sites.has(k)) sites.set(k, l); });
     const all = [...pending, ...items].sort(order);
     if (!all.length) return note('Nothing here yet. Be the first to recommend something.');
     list.textContent = '';
