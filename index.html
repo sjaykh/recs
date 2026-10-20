@@ -88,6 +88,7 @@ select option { color: #000; background: #fff; }
 .cloud li.done > * { text-decoration: line-through; text-decoration-thickness: 1px; opacity: .45; }
 .cloud li.sent > * { opacity: .8; font-style: italic; border-bottom: 1px dashed var(--dim); }
 .cloud li > a:hover, .cloud li > a:focus-visible { opacity: 1; }
+.cloud li > .who { font-size: .55em; letter-spacing: .02em; margin-left: .35em; white-space: nowrap; text-decoration: none; font-style: normal; border: 0; }
 
 /* a mix of faces, weights and tilts */
 .cloud li:nth-child(5n + 1) { font-family: var(--serif); }
@@ -125,6 +126,7 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
   .shelf { margin-top: 72px; }
   .cloud { margin: 0; gap: 16px 18px; }
   .cloud li > * { font-size: .8em; }
+  .cloud li > .who { font-size: .5em; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cloud li:hover, .go:hover { transform: none; }
@@ -251,7 +253,9 @@ footer a:hover { color: var(--text); text-decoration-color: var(--text); }
     const inner = link
       ? el('a', { href: link, rel: 'noopener noreferrer', target: '_blank', title: text }, it.title)
       : el('span', { title: text }, it.title);
-    return el('li', { class: cls || null }, inner, el('span', { class: 'vh' }, ' (' + text + ')'));
+    // The recommender's name, small and in brackets, right after the title.
+    const who = it.by ? el('span', { class: 'who', 'aria-hidden': 'true' }, '(' + it.by + ')') : null;
+    return el('li', { class: cls || null }, inner, who, el('span', { class: 'vh' }, ' (' + text + ')'));
   };
 
   const rank = (it) => it.pending ? 0 : it.status === 'In progress' ? 1 : it.status === 'Done' ? 3 : 2;
